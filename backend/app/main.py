@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from app.api.test_user import router as user_router
+from app.api import users
+
+
 
 app = FastAPI()
 
@@ -7,4 +9,4 @@ app = FastAPI()
 def health_check():
     return {"status": "ok"}
 
-app.include_router(user_router)
+app.include_router(users.router)
