@@ -6,36 +6,29 @@ An application supporting addiction recovery, powered by GPT for personalized in
 
 ## Setup
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/TropDog/anti-addiction-app.git
-   cd anti-addiction-app/backend
-   ```
+1. Create your own `.env` file with the following config variables:
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - POSTGRES_DB
+    - POSTGRES_HOST
+    - POSTGRES_PORT
 
-2. Create and activate a virtual environment (Windows PowerShell):
-    ```bash
-    python -m venv .venv
-    .\.venv\Scripts\activate
-    ```
-3. Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
+2. Make sure you have Docker and Docker Compose installed.
 
 ## Usage
 
-1. Start the FastAPI server locally:
+1. Run services from main directory:
     ```bash
-    uvicorn app.main:app --reload
+    docker-compose up --build
     ```
 
 2. Check the health endpoint:
-    Open your browser and go to http://127.0.0.1:8000/health
-    You should see the JSON response: 
+    Open your browser and go to http://127.0.0.1:8000/health  
+    You should see the JSON response:  
     ```json
     {"status":"ok"}
     ```
+    
 ## Contribution
 
 Contribution guidelines will be added soon.
