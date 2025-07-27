@@ -15,6 +15,8 @@ An application supporting addiction recovery, powered by GPT for personalized in
     - ALGORITHM
     - JWT_SECRET_KEY
     - ACCESS_TOKEN_EXPIRE_MINUTES
+    - MAX_LOGIN_ATTEMPTS
+    - BLOCK_TIME
 
 2. Make sure you have Docker and Docker Compose installed.
 

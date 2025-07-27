@@ -36,12 +36,9 @@ def register_user(user: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/api/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-     user = authenticate_user(db, data.username, data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Nieprawidłowy email lub hasło",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    try:
+        user = authenticate_user(db, data.email, data.password)
+    except HTTPException as e:
+        raise e
     token = create_access_token({"sub": user.email})
     return {"access_token": token}
