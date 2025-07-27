@@ -12,6 +12,9 @@ An application supporting addiction recovery, powered by GPT for personalized in
     - POSTGRES_DB
     - POSTGRES_HOST
     - POSTGRES_PORT
+    - ALGORITHM
+    - JWT_SECRET_KEY
+    - ACCESS_TOKEN_EXPIRE_MINUTES
 
 2. Make sure you have Docker and Docker Compose installed.
 
