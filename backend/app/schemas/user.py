@@ -22,3 +22,19 @@ class UserRegister(BaseModel):
                 "addiction_type": "smoking"
             }
         }
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: constr(min_length=8)
+
+    @field_validator("password")
+    def password_strength(cls, v):
+        if len(re.findall(r"\d", v)) < 3:
+            raise ValueError("Password must contain at least 3 digits")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("Password must contain at least one special character")
+        return v
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
