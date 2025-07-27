@@ -31,6 +31,8 @@ services:
       ALGORITHM: ${ALGORITHM}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS}
+      BLOCK_TIME: ${BLOCK_TIME}
     depends_on:
       - db
     networks:

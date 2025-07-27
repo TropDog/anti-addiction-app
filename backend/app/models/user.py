@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -13,5 +13,5 @@ class User(Base):
     addiction_type = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    failed_attempts = Column(Integer, default=0)
+    failed_attempts = Column(Integer, default=0, nullable = False)
     blocked_until = Column(DateTime, nullable=True)
