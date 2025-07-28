@@ -1,7 +1,7 @@
 # anti-addiction-app
 1. Project Overview
-   An application supporting addiction recovery, powered by GPT for personalized interactions and motivational support.
-   The project is based on a modern approach using AI tools to effectively support users.
+- An application supporting addiction recovery, powered by GPT for personalized interactions and motivational support.
+- The project is based on a modern approach using AI tools to effectively support users.
 
 2. Key Features
 - User registration and login with JWT and sliding expiration.
@@ -55,8 +55,8 @@
 - BLOCK_TIME
 
 2. Make sure you have Docker and Docker Compose installed.
-   Running Docker Compose will create images for the backend, the database, and Alembic within a single network.
-   This setup ensures the database is automatically migrated to the latest schema version, and all services can communicate seamlessly with each other.
+- Running Docker Compose will create images for the backend, the database, and Alembic within a single network.
+- This setup ensures the database is automatically migrated to the latest schema version, and all services can communicate seamlessly with each other.
    
 ## Usage
 
