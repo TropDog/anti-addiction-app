@@ -1,7 +1,7 @@
 # anti-addiction-app
 1. Project Overview
-An application supporting addiction recovery, powered by GPT for personalized interactions and motivational support.
-- The project is based on a modern approach using AI tools to effectively support users.
+   An application supporting addiction recovery, powered by GPT for personalized interactions and motivational support.
+   The project is based on a modern approach using AI tools to effectively support users.
 
 2. Key Features
 - User registration and login with JWT and sliding expiration.
@@ -10,12 +10,12 @@ An application supporting addiction recovery, powered by GPT for personalized in
 - Backend logic managing user sessions and interactions.
 
 3. Used technologies
-   - Python
-   - FastAPI backend framework
-   - Docker, to simplify project launch as much as possible
-   - PostgreSQL
-   - Alembic
-   - GPT
+- Python
+- FastAPI backend framework
+- Docker, to simplify project launch as much as possible
+- PostgreSQL
+- Alembic
+- GPT
 4. Project structure
    ```
     anti-addiction-app/
@@ -43,20 +43,20 @@ An application supporting addiction recovery, powered by GPT for personalized in
 ## Setup
 
 1. Create your own `.env` file with the following config variables:
-    - POSTGRES_USER
-    - POSTGRES_PASSWORD
-    - POSTGRES_DB
-    - POSTGRES_HOST
-    - POSTGRES_PORT
-    - ALGORITHM
-    - JWT_SECRET_KEY
-    - ACCESS_TOKEN_EXPIRE_MINUTES
-    - MAX_LOGIN_ATTEMPTS
-    - BLOCK_TIME
+- POSTGRES_USER
+- POSTGRES_PASSWORD
+- POSTGRES_DB
+- POSTGRES_HOST
+- POSTGRES_PORT
+- ALGORITHM
+- JWT_SECRET_KEY
+- ACCESS_TOKEN_EXPIRE_MINUTES
+- MAX_LOGIN_ATTEMPTS
+- BLOCK_TIME
 
 2. Make sure you have Docker and Docker Compose installed.
-   - Running Docker Compose will create images for the backend, the database, and Alembic within a single network.  
-   - This setup ensures the database is automatically migrated to the latest schema version, and all services can communicate seamlessly with each other.
+   Running Docker Compose will create images for the backend, the database, and Alembic within a single network.
+   This setup ensures the database is automatically migrated to the latest schema version, and all services can communicate seamlessly with each other.
    
 ## Usage
 
