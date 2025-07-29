@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.user import User
 from app.schemas.user import UserRegister, LoginRequest, TokenResponse
 from app.core.security import hash_password
-from app.core.auth import authenticate_user, create_access_token
+from app.core.auth import authenticate_user, create_access_token, get_current_user
+
 
 router = APIRouter()
 
@@ -42,3 +43,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise e
     token = create_access_token({"sub": user.email})
     return {"access_token": token}
+
+@router.get("/protected")
+def protected_endpoint(user=Depends(get_current_user)):
+    return {"message": "You are authenticated", "user": user}

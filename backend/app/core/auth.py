@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 from dotenv import load_dotenv
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.models.user import User
 import app.core.security as security
@@ -53,6 +54,43 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def verify_and_refresh_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp = payload.get("exp")
+        if not exp:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token has no expiry")
+
+        expire_time = datetime.utcfromtimestamp(exp)
+        now = datetime.utcnow()
+        if expire_time < now:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
+
+        new_expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        payload["exp"] = new_expire.timestamp()
+
+        refreshed_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+        return payload, refreshed_token
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security.bearer_scheme)
+):
+    token = credentials.credentials
+    try:
+        payload, refreshed_token = verify_and_refresh_token(token)
+        return payload
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
 
 
 
