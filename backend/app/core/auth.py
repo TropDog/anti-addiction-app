@@ -5,11 +5,10 @@ from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from app.models.user import User
+from app.modules.user.models import User
 import app.core.security as security
 import jwt
 import os
-import time
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,7 +21,6 @@ MAX_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS"))
 BLOCK_TIME = int(os.getenv("BLOCK_TIME")) 
 
 def authenticate_user(db: Session, email: str, password: str):
-    from app.models.user import User 
     
     user = db.query(User).filter(User.email == email).first()
     if not user:
