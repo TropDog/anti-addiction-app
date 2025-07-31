@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from app.api import users
+from app.api.routes import router as api_router
 from app.core.sliding_expiration import SlidingExpirationMiddleware
 
 
-app = FastAPI()
+app = FastAPI(title = "Anti-addiction-app")
 
 app.add_middleware(SlidingExpirationMiddleware)
 
@@ -11,4 +11,4 @@ app.add_middleware(SlidingExpirationMiddleware)
 def health_check():
     return {"status": "ok"}
 
-app.include_router(users.router)
+app.include_router(api_router)

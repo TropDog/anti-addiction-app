@@ -23,9 +23,12 @@
     │   ├── app/
     │   │   ├── api/                    # API routes
     │   │   ├── core/                   # Core application setup
-    │   │   ├── models/                 # Database models
-    │   │   ├── schemas/                # Pydantic models for request/response validation
-    │   │   ├── services/               # Business logic 
+    │   │   ├── modules/                # Modules used in app
+    │   │   │   ├──user/                # User module with api, models and schema
+    │   │   │   └── forms/              # Forms module with ...
+    │   │   │
+    │   │   │
+    │   │   ├── services/               # Universal features for the app 
     │   │   └── main.py                 # Application entry point, starts the FastAPI server
     │   │
     │   │
