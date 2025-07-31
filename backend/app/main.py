@@ -6,9 +6,9 @@ from app.core.sliding_expiration import SlidingExpirationMiddleware
 app = FastAPI(title = "Anti-addiction-app")
 
 app.add_middleware(SlidingExpirationMiddleware)
-
+app.include_router(api_router)
+print("ROUTES LOADED")
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-app.include_router(api_router)

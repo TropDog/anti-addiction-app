@@ -6,7 +6,9 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.modules.user.models import User
+from app.core.database import SessionLocal
 import app.core.security as security
+
 import jwt
 import os
 
@@ -19,6 +21,13 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 MAX_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS"))
 BLOCK_TIME = int(os.getenv("BLOCK_TIME")) 
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def authenticate_user(db: Session, email: str, password: str):
     
@@ -78,13 +87,25 @@ def verify_and_refresh_token(token: str):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security.bearer_scheme)
-):
+    credentials: HTTPAuthorizationCredentials = Depends(security.bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
     token = credentials.credentials
     try:
         payload, refreshed_token = verify_and_refresh_token(token)
-        return payload
-    except HTTPException as e:
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return user
+
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
