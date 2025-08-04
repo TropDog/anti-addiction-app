@@ -19,16 +19,14 @@ def get_db():
 
 
 @router.get("/types/all", tags=["forms"])
-def get_all_forms():
-    db = Session(Depends=get_db)
+def get_all_forms(db: Session = Depends(get_db)):
     forms = db.query(models.FormType).all()
     return forms
 
-
 @router.get("/questions/{form_id}", tags=["forms"])
-def get_questions(form_id: UUID):
-    db = Session(Depends=get_db)
-    form = db.query(models.FormType).filter(models.FormType.form_id == form_id).first()
+def get_questions(form_id: UUID,
+                  db:  Session = Depends(get_db)):
+    form = db.query(models.FormType).filter(models.FormType.id == form_id).first()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
     return {
@@ -47,7 +45,7 @@ def get_questions(form_id: UUID):
     }
 
 @router.post("/{form_id}/answers", tags=["forms"])
-async def submit_answers(form_id: UUID, data: schemas.AnswerSchema, current_user: User = Depends(get_current_user)):
+def submit_answers(form_id: UUID, data: schemas.AnswerSchema, current_user: User = Depends(get_current_user)):
     db = Session(Depends=get_db)
     form = db.query(models.FormType).filter(models.FormType.form_id == form_id).first()
     if not form:

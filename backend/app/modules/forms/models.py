@@ -8,10 +8,10 @@ class FormType(Base):
     __tablename__ = "forms"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    addiction_type = Column(String, unique=True, nullable=False)
+    addiction_type = Column(String, unique=False, nullable=False)
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
-
+    is_active = Column(Boolean, default=False)
     questions = relationship("Question", back_populates="form", cascade="all, delete")
 
 class Question(Base):
@@ -33,13 +33,4 @@ class Answer(Base):
     answers = Column(JSON, nullable=False)
 
     form = relationship("FormType")
-    user = relationship("User")
-
-class FormSubmission(Base):
-    __tablename__ = "form_submissions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    answers = Column(JSONB, nullable=False)
-
     user = relationship("User")

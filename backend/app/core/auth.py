@@ -7,8 +7,8 @@ from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.modules.user.models import User
 from app.core.database import SessionLocal
+from jose import JWTError
 import app.core.security as security
-
 import jwt
 import os
 
@@ -86,7 +86,7 @@ def verify_and_refresh_token(token: str):
     except jwt.PyJWTError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security.bearer_scheme),
     db: Session = Depends(get_db),
 ) -> User:
@@ -103,13 +103,19 @@ async def get_current_user(
 
         return user
 
-    except HTTPException:
-        raise
-    except Exception:
+    except JWTError: 
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
+            status_code=401,
+            detail="Invalid or expired token"
         )
+
+def get_current_admin(user = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Admin access required'
+        )
+    return user
 
 
 
