@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from app.core.database import Base
 from app.modules.user.models import User
+from app.modules.forms.models import FormSubmission
 
 
 

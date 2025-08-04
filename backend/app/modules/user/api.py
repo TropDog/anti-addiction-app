@@ -41,7 +41,8 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         user = authenticate_user(db, data.email, data.password)
     except HTTPException as e:
         raise e
-    token = create_access_token({"sub": user.email})
+    role = 'admin' if user.is_admin else 'user'
+    token = create_access_token(data={"sub": str(user.id), "role": role})
     return {"access_token": token}
 
 @router.get("/protected")
