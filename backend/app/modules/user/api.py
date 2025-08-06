@@ -17,7 +17,9 @@ def get_db():
         db.close()
 
 @router.post("/api/register", status_code=status.HTTP_201_CREATED)
-def register_user(user: UserRegister, db: Session = Depends(get_db)):
+def register_user(user: UserRegister, 
+                  db: Session = Depends(get_db)
+):
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -36,7 +38,9 @@ def register_user(user: UserRegister, db: Session = Depends(get_db)):
     return {"message": "User successfully registered", "user_id": str(new_user.id)}
 
 @router.post("/api/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(data: LoginRequest,
+          db: Session = Depends(get_db)
+):
     try:
         user = authenticate_user(db, data.email, data.password)
     except HTTPException as e:

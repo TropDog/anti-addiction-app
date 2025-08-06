@@ -6,9 +6,9 @@ from sqlalchemy import pool
 from alembic import context
 from app.core.database import Base
 from app.modules.user.models import User
-from app.modules.forms.models import FormSubmission
+from app.modules.forms.models import FormType, Question, Answer
 
-
+# alembic revision --autogenerate -m "migration_des"
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
