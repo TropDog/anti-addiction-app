@@ -31,7 +31,7 @@ def create_form(
     return {"id": new_form.id, "message": "Form created successfully"}
 
 @router.post("/activate_form/{form_id}", tags=["forms-admin"])
-def create_form(
+def change_active_form(
     form_id: UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_admin)
@@ -41,3 +41,10 @@ def create_form(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"id": activated_form.id, "message": "Form activated successfully"}
+
+@router.get("/types/all", tags=["forms-admin"])
+def get_all_forms(db: Session = Depends(get_db),
+                  user: User = Depends(get_current_admin)
+):
+    forms = db.query(models.FormType).all()
+    return forms

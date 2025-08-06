@@ -1,18 +1,14 @@
 from pydantic import BaseModel
-from typing import Dict, Any, Optional, List
+from typing import Optional, List, Union
 from uuid import UUID
 
-class AnswerSchema(BaseModel):
-    answers: Dict[str, Any]
 
-class FormSchema(BaseModel):
-    id: UUID
-    addiction_type: str
-    name: str
-    description: Optional[str] = None
+class QuestionAnswer(BaseModel):
+    question_id: UUID
+    value: Union[str, int, float, bool, dict, list]
 
-    class Config:
-        orm_mode = True
+class AnswerSubmitSchema(BaseModel):
+    answers: List[QuestionAnswer]
 
 class QuestionCreate(BaseModel):
     text: str

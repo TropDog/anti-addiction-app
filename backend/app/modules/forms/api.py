@@ -18,17 +18,17 @@ def get_db():
         db.close()
 
 
-@router.get("/types/all", tags=["forms"])
-def get_all_forms(db: Session = Depends(get_db)):
-    forms = db.query(models.FormType).all()
-    return forms
+@router.get("/addiction/active/form", tags=["forms"])
+def get_active_form(db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)):
+    form = db.query(models.FormType).filter(
+        models.FormType.addiction_type == user.addiction_type,
+        models.FormType.is_active == True
+    ).first()
 
-@router.get("/questions/{form_id}", tags=["forms"])
-def get_questions(form_id: UUID,
-                  db:  Session = Depends(get_db)):
-    form = db.query(models.FormType).filter(models.FormType.id == form_id).first()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
+
     return {
         "id": form.id,
         "name": form.name,
@@ -45,19 +45,39 @@ def get_questions(form_id: UUID,
     }
 
 @router.post("/{form_id}/answers", tags=["forms"])
-def submit_answers(form_id: UUID, data: schemas.AnswerSchema, current_user: User = Depends(get_current_user)):
-    db = Session(Depends=get_db)
-    form = db.query(models.FormType).filter(models.FormType.form_id == form_id).first()
+def submit_answers(form_id: UUID,
+                   data: schemas.AnswerSubmitSchema,
+                   db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    
+    form = db.query(models.FormType).filter(models.FormType.id == form_id).first()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
 
-    answer = models.Answer(
-        form_id=form_id,
-        user_id=current_user.id,
-        answers=data.answers
-    )
+    for answer_data in data.answers:
+        db.add(models.Answer(
+            form_id=form_id,
+            user_id=current_user.id,
+            question_id=answer_data.question_id,
+            value=answer_data.value
+        ))
 
-    db.add(answer)
     db.commit()
-    db.refresh(answer)
-    return {"id": answer.id, "status": "saved"}
+    return {"status": "saved"}
+
+@router.get("/{form_id}/answers", tags=["forms"])
+def get_user_answers(form_id: UUID,
+                     db: Session = Depends(get_db),
+                     current_user: User = Depends(get_current_user)):
+    answers = db.query(models.Answer).filter(
+        models.Answer.form_id == form_id,
+        models.Answer.user_id == current_user.id
+    ).all()
+
+    return [
+        {
+            "question_id": a.question_id,
+            "value": a.value,
+            "created_at": a.created_at
+        } for a in answers
+    ]
