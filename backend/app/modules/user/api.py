@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
-from app.modules.user.models import User
+from app.modules.user.models import User, UserProfile
 from app.modules.user.schemas import UserRegister, LoginRequest, TokenResponse
 from app.core.security import hash_password
 from app.core.auth import authenticate_user, create_access_token, get_current_user
@@ -52,3 +52,12 @@ def login(data: LoginRequest,
 @router.get("/protected")
 def protected_endpoint(user=Depends(get_current_user)):
     return {"message": "You are authenticated", "user": user}
+
+@router.get("/profile")
+def get_user_profile(user: User = Depends(get_current_user),
+                     db: Session = Depends(get_db)
+):
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).order_by(UserProfile.created_at.desc()).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="User profile not found")
+    return profile
