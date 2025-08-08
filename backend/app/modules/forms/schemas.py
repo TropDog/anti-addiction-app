@@ -13,6 +13,7 @@ class AnswerSubmitSchema(BaseModel):
 class QuestionCreate(BaseModel):
     text: str
     type: str
+    user_profile_field_name: str
     options: Optional[dict] = None
     required: Optional[bool] = True
 

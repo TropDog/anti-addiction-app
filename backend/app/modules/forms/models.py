@@ -19,6 +19,7 @@ class Question(Base):
     __tablename__ = "questions"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     form_id = Column(UUID(as_uuid=True), ForeignKey("forms.id"), nullable=False)
+    user_profile_field_name = Column(String, nullable=True)
     text = Column(String, nullable=False)
     type = Column(String, nullable=False)
     options = Column(JSON, nullable=True)
@@ -33,7 +34,7 @@ class Answer(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     question_id = Column(UUID(as_uuid=True), ForeignKey("questions.id"), nullable=False)
     value = Column(JSON, nullable=False) 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     form = relationship("FormType")
     user = relationship("User")

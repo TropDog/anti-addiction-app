@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.core.auth import get_current_user
 from app.modules.user.models import User
+from app.modules.forms.services import update_user_profile_from_answers
 import app.modules.forms.models as models
 import app.modules.forms.schemas as schemas
 from uuid import UUID
@@ -20,7 +21,8 @@ def get_db():
 
 @router.get("/addiction/active/form", tags=["forms"])
 def get_active_form(db: Session = Depends(get_db),
-                    user: User = Depends(get_current_user)):
+                    user: User = Depends(get_current_user)
+):
     form = db.query(models.FormType).filter(
         models.FormType.addiction_type == user.addiction_type,
         models.FormType.is_active == True
@@ -61,8 +63,10 @@ def submit_answers(form_id: UUID,
             question_id=answer_data.question_id,
             value=answer_data.value
         ))
-
     db.commit()
+
+    update_user_profile_from_answers(db, current_user.id, form_id)
+    
     return {"status": "saved"}
 
 @router.get("/{form_id}/answers", tags=["forms"])
