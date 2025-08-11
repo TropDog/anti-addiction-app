@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, DateTime, Integer, Boolean, ForeignKey, Enum, CheckConstraint
+from sqlalchemy import Column, String, DateTime, Integer, Boolean, ForeignKey, CheckConstraint
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
