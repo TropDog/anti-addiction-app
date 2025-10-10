@@ -7,6 +7,7 @@ from alembic import context
 from app.core.database import Base
 from app.modules.user.models import User
 from app.modules.forms.models import FormType, Question, Answer
+from app.modules.gpt_module.models import Chat
 
 # alembic revision --autogenerate -m "migration_des"
 

@@ -12,13 +12,11 @@ class SenderEnum(str,enum.Enum):
 
 class Chat(Base):
     __tablename__ = "chats"
-
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     title = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-   
     user = relationship("User")
     messages = relationship("Message", back_populates="chat",cascade="all, delete-orphan")
     conversation_state = relationship("ConversationState", back_populates="chat", uselist=False, cascade="all, delete-orphan")
@@ -26,7 +24,7 @@ class Chat(Base):
 class Message(Base):
     __tablename__ = "messages"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chat_id = chat_id = Column(UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, unique=True)
+    chat_id = chat_id = Column(UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, unique=False)
     sender = Column(Enum(SenderEnum, name="sender_enum"), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -34,9 +32,9 @@ class Message(Base):
     chat = relationship("Chat")
     
     __table_args__ = (
-Index("idx_messages_chat_created", "chat_id", "created_at")
+        Index("idx_messages_chat_created", "chat_id", "created_at"),
     )
-
+    
 class ConversationState(Base):
     __tablename__ = "conversation_states"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

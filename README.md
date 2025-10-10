@@ -93,7 +93,7 @@
     ```
     then
     ```bash
-    wscat -c ws://localhost:8000/gpt_module/ws/chat
+    wscat -c ws://localhost:8000/gpt_module/ws/{chat_id}
     ```
     
 5. API Documentation
