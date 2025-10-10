@@ -1,8 +1,31 @@
 import uuid
-from sqlalchemy import select, desc, asc
+from sqlalchemy import select, desc, asc, func
 from sqlalchemy.orm import Session
-from app.modules.user.models import UserProfile
-from app.modules.gpt_module.models import Chat, Message, ConversationState
+from app.modules.user.models import UserProfile, User
+from app.modules.gpt_module.models import Chat, Message, ConversationState, SenderEnum
+from openai import OpenAI
+from fastapi import WebSocket
+from dotenv import load_dotenv
+import os
+import logging
+import asyncio
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPEN_AI_SECRET_KEY"))
+logger = logging.getLogger("uvicorn")
+
+
+THERAPIST_BEHAVIOR_PROMPT = """
+You are an empathetic therapist supporting individuals struggling with addiction.
+Your goal is not only to show understanding, but also to help the user reflect on their behavior, emotions, and underlying causes of addiction.
+Use compassionate and natural language, but also guide the conversation so that the user:
+- can explore the sources of their emotions and motivation,
+- can find practical steps they can take,
+- feels that the conversation is evolving rather than repeating.
+
+Avoid repeating generic phrases such as "I'm here for you" or "How are you feeling?".
+If the user has already expressed their emotions, acknowledge them and gently propose a direction for reflection or the next step in the conversation.
+"""
 
 def prepare_intro_context(user_profile, chat):
     return {
@@ -67,8 +90,10 @@ def get_chat_context(session: Session, chat_id: uuid.UUID, last_messages_limit: 
         raise Exception("Chat not found")  
 
     user_profile = session.execute(
-        select(UserProfile).where(UserProfile.user_id == chat.user_id)
-    ).scalar_one_or_none()
+        select(UserProfile)
+        .where(UserProfile.user_id == chat.user_id)
+        .order_by(UserProfile.created_at.desc()) 
+    ).scalars().first()
 
     if not user_profile:
         return None  
@@ -77,7 +102,7 @@ def get_chat_context(session: Session, chat_id: uuid.UUID, last_messages_limit: 
         select(Chat).where(Chat.user_id == chat.user_id)
     ).scalars().all()
 
-    if len(user_chats) == 1:
+    if not chat.messages or len(chat.messages) == 0:
         return prepare_intro_context(user_profile, chat), True
 
     conversation_state = session.execute(
@@ -97,8 +122,9 @@ def get_chat_context(session: Session, chat_id: uuid.UUID, last_messages_limit: 
 
 def prepare_system_content(context: dict, is_first_chat: bool) -> str:
     user = context.get("user_profile", {})
-    summary = context.get("summary", "")
-    chat_title = context.get("chat_title", "Therapy Chat")
+    conversation_state = context.get("conversation_state", {})
+    summary = conversation_state.get("summary", "")
+    chat_title = context.get("chat", {}).get("title", "Therapy Chat")
     
     nickname = user.get("nickname", "User")
     age = user.get("age", "unknown age")
@@ -144,4 +170,165 @@ def prepare_system_content(context: dict, is_first_chat: bool) -> str:
         "- Do not mention that you are an AI."
     )
     
-    return intro + requirements
+    return intro + requirements + "\n\n" + THERAPIST_BEHAVIOR_PROMPT
+
+def creat_new_chat(user: User, chat_title: str, db: Session):
+    new_chat = Chat(
+        user_id = user.id,
+        title = chat_title
+    )
+    db.add(new_chat)
+    db.commit()
+    db.refresh(new_chat)
+
+def save_message(chat_id: uuid.UUID, db: Session, data, sender: SenderEnum):
+    user_msg = Message(
+        chat_id=chat_id,
+        sender=sender,
+        content=data,
+    )
+    db.add(user_msg)
+    db.commit()
+    db.refresh(user_msg)
+
+async def run_in_thread(func, *args, **kwargs):
+    return await (asyncio.to_thread(func, *args, **kwargs))
+
+def update_conversation_state(db: Session, chat: Chat, last_messages: list[Message]):
+    previous_summary = chat.conversation_state.summary if chat.conversation_state else "No summary yet."
+
+    messages_text = "\n".join([
+        f"{msg.sender.value}: {msg.content}" for msg in last_messages
+    ])
+
+    summarization_prompt = [
+        {"role": "system", "content": "You are a summarizer of therapy chat sessions. Summarize in neutral, factual, empathetic style."},
+        {"role": "user", "content": f"Previous summary:\n{previous_summary}"},
+        {"role": "user", "content": f"Recent messages:\n{messages_text}"},
+        {"role": "user", "content": "Update the summary to reflect the current state of the conversation. Keep it concise (max 5 sentences)."}
+    ]
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=summarization_prompt,
+        temperature=0.3,
+    )
+    new_summary = response.choices[0].message.content.strip()
+
+    if not chat.conversation_state:
+        chat.conversation_state = ConversationState(
+            chat_id=chat.id,
+            summary=new_summary
+        )
+    else:
+        chat.conversation_state.summary = new_summary
+
+    db.add(chat)
+    db.commit()
+    db.refresh(chat.conversation_state)
+
+    return chat.conversation_state
+
+async def handle_chat_logic(
+    websocket: WebSocket,
+    db: Session,
+    chat_id: uuid.UUID
+):
+    """
+    Websocket chat logic.
+    - saves every msg into db
+    - creates context
+    - after every 10 new messages creates new summary
+    """
+
+    await websocket.accept()
+    logger.info("WebSocket accepted, now entering receive loop")
+    try:
+        while True:
+            user_message = await websocket.receive_text()
+            logger.debug(f"Received message: {user_message}")
+            await websocket.send_text(f"Echo: {user_message}")
+
+            chat = await run_in_thread(
+                lambda: db.execute(select(Chat).where(Chat.id == chat_id)).scalar_one()
+            )
+
+            logger.info(f"Loaded chat from DB: {chat.id}")
+
+            await run_in_thread(save_message, chat_id, db, user_message, SenderEnum.user.value)
+            logger.info(f"Saved user message to DB: {user_message}")
+            context, is_first_chat = await run_in_thread(
+                get_chat_context, db, chat.id, last_messages_limit=10
+            )
+            system_prompt = str(prepare_system_content(context, is_first_chat))
+            logger.debug(f"Prepared system prompt: {system_prompt[:50]}...")
+
+            history_messages = [
+                {"role": "system", "content": system_prompt}
+            ]
+            
+            for msg in context["messages"]:
+                history_messages.append({
+                    "role": "user" if msg["sender"] == "user" else "assistant",
+                    "content": msg["content"]
+                })
+            
+            history_messages.append({
+                "role": "user",
+                "content": user_message
+            })            
+
+            if not any(msg["content"] == user_message for msg in context["messages"]):
+                context["messages"].append({
+                    "sender": "user",
+                    "content": user_message,
+                    "created_at": "now"  
+                })
+
+            logger.debug(f"History messages prepared: {len(history_messages)} messages")
+
+            response = await run_in_thread(
+                client.chat.completions.create,
+                model="gpt-3.5-turbo",
+                messages=history_messages,
+                temperature=0.7,
+                max_tokens=400,
+            )
+
+            ai_message = response.choices[0].message.content.strip()
+            logger.info(f"Received AI message: {ai_message[:50]}...")
+
+            await run_in_thread(save_message, chat_id, db, ai_message, SenderEnum.therapist.value)
+            logger.info("Saved AI message to DB")
+
+            await websocket.send_text(str(ai_message))
+
+            total_messages = await run_in_thread(
+                lambda: db.execute(
+                    select(func.count(Message.id)).where(Message.chat_id == chat.id)
+                ).scalar()  
+            )
+
+            logger.debug(f"Total messages in chat: {total_messages}")
+
+            if total_messages % 10 == 0:
+                last_messages = await run_in_thread(
+                    lambda: db.execute(
+                        select(Message)
+                        .where(Message.chat_id == chat.id)
+                        .order_by(desc(Message.created_at))
+                        .limit(10)
+                    ).scalars().all()
+                )
+                last_messages.reverse()
+            
+                await run_in_thread(update_conversation_state, db, chat, last_messages)
+                logger.info("Chat summary updated and sent to WebSocket")
+
+    except Exception as e:
+        logger.exception("Unexpected error in websocket")
+        try:
+            reason = str(e)[:100]
+            await websocket.close(code=1011, reason=reason)
+        except RuntimeError:
+            pass
