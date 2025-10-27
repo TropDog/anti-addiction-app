@@ -61,7 +61,8 @@ services:
       - ./backend:/app
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     container_name: frontend_app
     ports:
       - "3000:80"
