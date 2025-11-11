@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { loginApi, TokenResponse } from "../api/auth.ts";
+import { loginApi, TokenResponse } from "../api/auth";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
