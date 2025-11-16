@@ -47,7 +47,10 @@ def login(data: LoginRequest,
         raise e
     role = 'admin' if user.is_admin else 'user'
     token = create_access_token(data={"sub": str(user.id), "role": role})
-    return {"access_token": token}
+    return {
+        "access_token": token,
+        "user_id": str(user.id)
+        }
 
 @router.get("/protected")
 def protected_endpoint(user=Depends(get_current_user)):

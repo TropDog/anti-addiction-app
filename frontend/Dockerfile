@@ -1,38 +1,29 @@
-# ---- Etap budowania ----
-FROM node:18-bullseye as builder
+# Stage 1: build React app
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Kopiujemy tylko package.json i tsconfig.json
-COPY package.json ./
+# Build-time env
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
-# Instalujemy wszystkie dependencies (devDependencies w tym build tools)
+COPY package*.json ./
 RUN npm install
-
-# Kopiujemy resztę frontendu
 COPY . .
+RUN npm run build
 
-#RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
-#RUN find . -type f -exec dos2unix {} \;
+# Stage 2: nginx
+FROM nginx:alpine
 
-RUN ls -l /app/src
-RUN cat /app/src/index.tsx
+# Usuń domyślne pliki
+RUN rm -rf /usr/share/nginx/html/*
 
-# Sprawdzenie obecności pliku App.tsx w katalogu /app/src
-RUN if [ -f /app/src/App.tsx ]; then \
-        echo "Plik App.tsx znaleziony ✅"; \
-    else \
-        echo "Plik App.tsx NIE ZNALEZIONY ❌"; \
-        ls -l /app/src; \
-        exit 1; \
-    fi
-
-ENV NODE_PATH=/app/src
-
-# Budujemy frontend (pomijamy testy)
-RUN npm run build -- --verbose
-
-# ---- Etap produkcyjny ----
-FROM nginx:stable-alpine
+# Skopiuj build React i szablon configu Nginx
 COPY --from=builder /app/build /usr/share/nginx/html
+COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
+
+# Expose port
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# CMD – zamień zmienną BACKEND_HOST i uruchom nginx
+CMD envsubst '$BACKEND_HOST' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf && \
+    nginx -g 'daemon off;'

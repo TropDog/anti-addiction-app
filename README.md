@@ -104,6 +104,12 @@
 
    This interface allows you to explore available endpoints, view request and response schemas, and test the API directly from your browser.
 
+6. Frontend MVP
+   Access frontend:   
+   [http://localhost:3000/register]  
+   [http://localhost:3000/login]
+   
+
    
 ## Contribution
 

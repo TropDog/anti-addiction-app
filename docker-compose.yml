@@ -63,16 +63,18 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}  # Build-time React
     container_name: frontend_app
     ports:
       - "3000:80"
     environment:
-      REACT_APP_API_URL: ${REACT_APP_API_URL} 
+      BACKEND_HOST: ${REACT_APP_API_URL}   # Runtime Nginx
     depends_on:
       - backend
     networks:
       - backend_net
-
+      
 volumes:
   postgres_data:
 

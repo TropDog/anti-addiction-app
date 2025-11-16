@@ -247,7 +247,6 @@ async def handle_chat_logic(
         while True:
             user_message = await websocket.receive_text()
             logger.debug(f"Received message: {user_message}")
-            await websocket.send_text(f"Echo: {user_message}")
 
             chat = await run_in_thread(
                 lambda: db.execute(select(Chat).where(Chat.id == chat_id)).scalar_one()

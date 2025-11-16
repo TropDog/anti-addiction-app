@@ -10,7 +10,7 @@ from openai import OpenAI
 from uuid import UUID
 import os
 import app.modules.gpt_module.services as gpt_services
-
+from datetime import datetime
 router = APIRouter()
 load_dotenv()
 
@@ -31,7 +31,7 @@ def start_chat(user_id: UUID, db: Session = Depends(get_db)):
 
     new_chat = Chat(
         user_id=user.id,
-        title=f"Therapy Chat"
+        title = f"Therapy Chat {datetime.utcnow().isoformat()}"
     )
     db.add(new_chat)
     db.commit()
