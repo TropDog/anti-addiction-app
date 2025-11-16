@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, constr, field_validator
+from uuid import UUID
 import re
+
 
 class UserRegister(BaseModel):
     email: EmailStr
@@ -38,3 +40,4 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user_id: UUID
