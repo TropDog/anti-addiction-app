@@ -59,7 +59,9 @@
 - BLOCK_TIME
 - ADMIN_EMAIL
 - ADMIN_PASSWORD
-
+- OPEN_AI_SECRET_KEY
+- REACT_APP_API_URL
+- BACKEND_HOST
 2. Make sure you have Docker and Docker Compose installed.
 - Running Docker Compose will create images for the backend, the database, and Alembic within a single network.
 - This setup ensures the database is automatically migrated to the latest schema version, and all services can communicate seamlessly with each other.
